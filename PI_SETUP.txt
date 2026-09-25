@@ -1,87 +1,28 @@
-MINECRAFT VISION - RASPBERRY PI SETUP
-=====================================
-
-Detects creepers, skeletons, spiders, zombies and endermen from a webcam
-and draws a box with a confidence score around each one.
+How to run this script on the pi
 
 
-WHAT YOU NEED
--------------
-- Raspberry Pi 4 or Pi 5 (Pi 5 recommended)
-- 64-bit Raspberry Pi OS (the 32-bit version will NOT work)
-- A USB webcam
-- A monitor, or the Pi desktop (the preview window does not work over plain SSH)
-
-
-1. COPY THE PROJECT TO THE PI
------------------------------
-Copy the whole minecraft_vision folder to the Pi (USB stick, scp, or git).
-It must include:
-    main.py
-    requirements.txt
-    model/weights/best.pt
-
-Example with scp, run on your computer (replace the Pi username/hostname):
-    scp -r minecraft_vision pi@raspberrypi.local:~/
-
-
-2. INSTALL SYSTEM PACKAGES
---------------------------
-On the Pi, open a terminal:
+1. install packages and update
     sudo apt update
     sudo apt install -y python3-venv libgl1
 
 
-3. CREATE A VIRTUAL ENVIRONMENT AND INSTALL
--------------------------------------------
-    cd ~/minecraft_vision
+2. create and start virtual enviroment
     python3 -m venv .venv
-    source .venv/bin/activate
-    pip install --upgrade pip
+    To start > source .venv/bin/activate
+    To end > deactivate
+
+    to download ultralytic
     pip install -r requirements.txt
 
-This can take 10+ minutes on a Pi (it installs PyTorch).
 
 
-4. CONVERT THE MODEL TO NCNN (RECOMMENDED, ONE TIME)
-----------------------------------------------------
-NCNN runs several times faster on the Pi than the .pt file:
+
+3. CONVERT THE MODEL TO NCNN
     yolo export model=model/weights/best.pt format=ncnn
 
-This creates model/weights/best_ncnn_model/. main.py uses it automatically
-when that folder exists, otherwise it falls back to best.pt.
 
-
-5. RUN IT
----------
-    source .venv/bin/activate      (every time you open a new terminal)
+4. RUN IT
     python main.py
 
-Press "q" in the window to quit.
-
-Options:
-    python main.py --source 1       use a different camera
-    python main.py --conf 0.6       only show detections that are 60%+ likely
-    python main.py --source clip.mp4   run on a video file
 
 
-TROUBLESHOOTING
----------------
-- Error about failing to open the source / black window:
-    Check the webcam is detected:  ls /dev/video*
-    Then try --source 1 or --source 2.
-
-- Very slow (low FPS):
-    Make sure you did step 4 (NCNN export).
-    Pi 4 is much slower than Pi 5; expect only a few frames per second.
-
-- "cannot connect to X server" / window does not open:
-    Run it from the Pi desktop, not a plain SSH session.
-
-- pip install fails on torch:
-    You are probably on 32-bit Raspberry Pi OS. Check with:  uname -m
-    It must say "aarch64". If it says "armv7l", reinstall the 64-bit OS.
-
-- Pi camera module (ribbon cable) instead of USB webcam:
-    It often does not work with --source 0 on newer Pi OS. The script
-    would need to be changed to use the picamera2 library.
